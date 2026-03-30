@@ -556,7 +556,13 @@ function clearAuthState() {
 
 async function fetchUserInfo() {
   try {
-    const r = await gFetch('https://www.googleapis.com/oauth2/v2/userinfo');
+    const resp = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: {
+        'Authorization': 'Bearer ' + APP.token,
+      }
+    });
+    if (!resp.ok) return;
+    const r = await resp.json();
     APP.user = r;
     const av = document.getElementById('user-avatar');
     if (r.picture) { av.src = r.picture; av.style.display = 'block'; }
