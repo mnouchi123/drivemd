@@ -1,29 +1,37 @@
 # DriveMD - プロダクト要件定義書 (PRD)
 
-**バージョン:** 1.0  
+**バージョン:** 1.1  
 **最終更新:** 2026-03-30  
-**ステータス:** MVP
+**ステータス:** MVP / Desktop auth verified, iOS auth under investigation
 
 ---
 
 ## 1. プロダクト概要
 
-DriveMD は Google Drive 上の Markdown ファイルを快適に閲覧・編集するための PWA（Progressive Web App）。iOS Safari でホーム画面に追加し、ネイティブアプリのように使用する。
+DriveMD は Google Drive 上の Markdown ファイルを快適に閲覧・編集するためのシングル HTML アプリ。GitHub Pages にデプロイし、iPad / iPhone の Safari からホーム画面追加して使うことを前提にしている。
 
-既存の DriveEditor（Sunaneko Inc.）の以下の不満点を解決するために開発:
+解決したい課題:
 
-- Markdown プレビューの表示領域が小さい（小さなモーダル内でしか表示できない）
-- ファイル名・日付でのソート機能がない
-- ファイル検索機能がない
+- Google Drive 上の Markdown を大きな表示領域で読みたい
+- ファイル名 / 更新日でソートしたい
+- ファイル名検索をしたい
+- 最小構成で Markdown の閲覧・編集・新規作成をしたい
 
 ---
 
-## 2. ターゲットユーザー
+## 2. 現在の運用前提
 
-- 自分（開発者・運用者）
-- 数人の友人（GCP テストユーザーとして登録）
+- 主利用者: 自分
+- 将来的には少人数共有も可能
+- 当面は GCP の OAuth 同意画面を `テスト` ステータスで運用
+- 配布先は GitHub Pages
 
-全員 Google Drive を日常的に使用し、Markdown ファイルを保存・管理している前提。
+現在の公開先:
+
+- リポジトリ: `https://github.com/mnouchi123/drivemd`
+- 公開 URL: `https://mnouchi123.github.io/drivemd/`
+- GCP Project: `iOS Apps`
+- GCP Project ID: `ios-apps-mnouchi123`
 
 ---
 
@@ -32,14 +40,14 @@ DriveMD は Google Drive 上の Markdown ファイルを快適に閲覧・編集
 | 項目 | 技術 |
 |------|------|
 | アーキテクチャ | シングル HTML ファイル（SPA） |
-| ホスティング | GitHub Pages（静的配信） |
-| 認証 | Google Identity Services（GIS）OAuth 2.0 |
+| ホスティング | GitHub Pages |
+| 認証 | Google OAuth 2.0 |
 | API | Google Drive API v3 |
 | Markdown レンダリング | marked.js 12.0.2 |
 | シンタックスハイライト | highlight.js 11.9.0 |
-| フォント | Montserrat（Google Fonts）+ Hiragino Sans フォールバック |
-| データ永続化 | localStorage（ブックマーク、Client ID） |
-| サーバーサイド | なし（全処理はクライアント側） |
+| フォント | Montserrat + Hiragino Sans fallback |
+| 永続化 | localStorage |
+| サーバーサイド | なし |
 
 ---
 
@@ -47,32 +55,43 @@ DriveMD は Google Drive 上の Markdown ファイルを快適に閲覧・編集
 
 ### 4-1. 認証方式
 
-Google Identity Services（GIS）ライブラリを使用した OAuth 2.0 トークン認証。
+現在の実装は、Google OAuth 2.0 のクライアントサイド認証を使い、同一タブのリダイレクトでアクセストークンを受け取る方式を採用している。
 
-- ユーザーが「Googleアカウントで接続」ボタンを押すと Google のログイン画面が表示される
-- ログイン後、アクセストークンが発行されブラウザ内で保持される
-- トークンはセッション中のみ有効（ページリロードで再認証が必要）
+- ユーザーが `Googleアカウントで接続` を押す
+- Google の認証画面へ同一タブで遷移
+- 認証後に `https://mnouchi123.github.io/drivemd/` へ戻る
+- URL fragment に含まれる `access_token` をアプリ側で取得
+- 取得したアクセストークンで Google Drive API を呼ぶ
+
+補足:
+
+- 初回は `Client ID設定` に OAuth Client ID を手入力する
+- `Client ID` は `localStorage` に保存する
+- 認証は Desktop Chrome で成功確認済み
+- iOS Safari / iOS Chrome では `401: invalid_client` が継続しており未解決
 
 ### 4-2. OAuth スコープ
 
-```
+```text
 https://www.googleapis.com/auth/drive
 ```
 
-Drive 全体への読み書きアクセス。ファイル閲覧・編集・新規作成に必要。
+Google Drive 全体への読み書きアクセス。閲覧、編集、新規作成に必要。
 
 ### 4-3. Client ID 管理
 
-- 初回利用時に設定画面から OAuth Client ID を入力
-- localStorage に保存し、以降は自動読み込み
-- Client ID はアプリに埋め込まず、ユーザーが設定する方式（友人共有時は Client ID を別途伝達）
+- 初回利用時に設定モーダルから入力
+- `localStorage` キー: `drivemd_client_id`
+- アプリ本体には埋め込まない
+- Web application タイプの OAuth client を使用する
 
-### 4-4. テストモード運用
+### 4-4. GCP 側の必須設定
 
-- GCP の OAuth 同意画面を「テスト」ステータスで運用
-- テストユーザーとして登録された Google アカウント（最大100人）のみ利用可能
-- Google の審査は不要
-- テストモードではトークン有効期限が7日間（期限切れ後は再ログイン）
+- OAuth クライアント種別: `Web application`
+- Authorized JavaScript origins: `https://mnouchi123.github.io`
+- Authorized redirect URIs: `https://mnouchi123.github.io/drivemd/`
+- Test user に利用 Gmail を追加
+- Data Access に `https://www.googleapis.com/auth/drive` を追加
 
 ---
 
@@ -82,180 +101,92 @@ Drive 全体への読み書きアクセス。ファイル閲覧・編集・新�
 
 | 要素 | 仕様 |
 |------|------|
-| アプリロゴ | 「DriveMD」テキスト（Montserrat Extra Bold） |
-| サブテキスト | 「Google DriveのMarkdownを美しく閲覧・編集」 |
-| ログインボタン | Google カラーアイコン + 「Googleアカウントで接続」 |
-| 設定リンク | 画面下部「Client ID設定」→ 設定モーダル |
+| ロゴ | `DriveMD` テキスト |
+| サブテキスト | Google Drive の Markdown を閲覧・編集 |
+| 主ボタン | `Googleアカウントで接続` |
+| 設定導線 | `Client ID設定` |
 
 ### 5-2. ファイル一覧画面
 
-#### ヘッダー
-- 戻るボタン（サブフォルダ内のみ表示）
-- 現在フォルダ名
+- サブフォルダ内でのみ戻るボタン表示
+- 現在フォルダ名をヘッダー表示
 - リフレッシュボタン
-- ユーザーアバター（タップでログアウト確認）
-
-#### ツールバー
-- 検索ボックス: ファイル名でインクリメンタルフィルタリング
-- ソートボタン: タップで循環切替（名前↑ → 名前↓ → 日付↓ → 日付↑）
-
-#### タブ
-- 「ファイル」タブ: Drive のファイル一覧
-- 「ブックマーク」タブ: ブックマーク済みファイル一覧
-
-#### パンくずナビゲーション
-- フォルダ階層を水平スクロールで表示
-- 各階層をタップでジャンプ可能
-
-#### ファイルリスト
-
-| 表示要素 | 仕様 |
-|----------|------|
-| アイコン | フォルダ: 青、.md ファイル: アクセントカラー、その他: グレー |
-| ファイル名 | 1行表示、長い名前は省略記号 |
-| 更新日 | 相対表示（「たった今」「3分前」「2日前」等）、7日超は yyyy/m/d |
-| ブックマークボタン | ファイルのみ表示、タップで ON/OFF |
-
-#### ファイルリストの動作
-
-| 操作 | 動作 |
-|------|------|
-| フォルダタップ | フォルダ内に移動（folderStack に push） |
-| .md ファイルタップ | Markdown ビューアを開く |
-| その他ファイルタップ | 反応なし（将来的にプレビュー対応可能） |
-
-#### FAB（Floating Action Button）
-- 右下に常時表示
-- タップで新規ファイル作成モーダルを表示
+- ユーザーアバター表示
+- ファイル名検索
+- ソート切替: `名前↑ → 名前↓ → 日付↓ → 日付↑`
+- タブ: `ファイル` / `ブックマーク`
+- パンくず表示
+- FAB で新規 `.md` 作成
 
 ### 5-3. Markdown ビューア
 
-#### ヘッダー
-- 戻るボタン → ファイル一覧に戻る
-- ファイル名表示
-- ブックマークボタン
-- 目次ボタン → TOC パネル表示
-- 編集ボタン → エディタ画面に遷移
+- 全画面表示
+- 見出し、段落、リンク、リスト、引用、コード、表、画像、水平線に対応
+- GFM 有効
+- `breaks: true`
+- TOC パネルあり
+- 編集画面へ遷移可能
 
-#### プレビュー領域
+### 5-4. エディタ
 
-全画面表示。以下の Markdown 要素をレンダリング:
+- テキストエリアで Markdown 編集
+- `files.update` による直接保存
+- 保存成功後はプレビューを再描画
 
-| 要素 | レンダリング仕様 |
-|------|-----------------|
-| 見出し（h1〜h6） | サイズ・太さの階層表示、h1 は下線付き |
-| 段落 | 14px 下マージン |
-| リンク | 青色、下線なし、ホバーで下線 |
-| リスト（ul/ol） | 左パディング 24px |
-| 引用（blockquote） | 左ボーダー + 背景色 |
-| インラインコード | 背景色付き、モノスペースフォント |
-| コードブロック | ダーク背景、シンタックスハイライト（highlight.js） |
-| テーブル | ボーダー付き、ヘッダー行に背景色 |
-| 画像 | max-width: 100%、角丸 |
-| 水平線 | 1px ボーダー |
+### 5-5. 新規作成
 
-GFM（GitHub Flavored Markdown）対応。改行は `breaks: true` で処理。
+- `.md` を自動付与
+- 初期内容は `# {filename}`
+- 作成後はエディタを開く
 
-#### 目次（TOC）パネル
+### 5-6. ブックマーク
 
-- 右からスライドインする 280px パネル
-- h1/h2/h3 の見出しを階層的にリスト表示
-- 各見出しをタップでスムーズスクロール
-- 見出しがない場合は「見出しなし」表示
-- パネル外タップまたは × ボタンで閉じる
+- `localStorage` 保存
+- 一覧 / ビューア両方から ON/OFF
+- ブックマークタブで一覧表示
 
-### 5-4. エディタ画面
+### 5-7. 追加したデバッグ挙動
 
-| 要素 | 仕様 |
-|------|------|
-| ヘッダー左 | × ボタン（キャンセル → ビューアに戻る） |
-| ヘッダー中央 | ファイル名 |
-| ヘッダー右 | 保存ボタン（緑色のフロッピーアイコン） |
-| 編集領域 | 全画面テキストエリア、モノスペースフォント、14px |
+認証調査のため、以下のトースト文言を出す実装を追加済み:
 
-#### 保存処理
-
-- Google Drive API の `files.update`（multipart upload）で直接上書き保存
-- Content-Type: `text/markdown`
-- 保存成功 → トースト「保存しました」→ ビューアに戻り再レンダリング
-- 保存失敗 → トースト「保存エラー: {message}」
-
-### 5-5. 新規ファイル作成
-
-#### 作成モーダル
-- ファイル名入力フィールド（プレースホルダー: 「example」）
-- 「.md は自動的に追加されます」の注記
-- 「作成」ボタン
-
-#### 作成処理
-- Google Drive API の `files.create`（multipart upload）
-- 保存先: 現在表示中のフォルダ
-- 初期内容: `# {ファイル名}\n\n`
-- 作成後 → エディタ画面を開く
-
-### 5-6. ブックマーク機能
-
-| 項目 | 仕様 |
-|------|------|
-| 保存先 | localStorage（`drivemd_bookmarks` キー） |
-| データ形式 | `{ fileId: fileName }` の JSON オブジェクト |
-| 追加/削除 | ファイル一覧のブックマークアイコン or ビューアのブックマークボタン |
-| 表示 | 「ブックマーク」タブでリスト表示 |
-| ブックマークからの操作 | タップで直接ビューアを開く、スワイプで削除（タップで削除） |
-
-### 5-7. 設定モーダル
-
-- ボトムシート形式
-- OAuth 2.0 Client ID の入力フィールド
-- GCP コンソールへの設定手順ガイドテキスト
-- 「保存」ボタン → localStorage に保存、GIS 再初期化
+- `認証エラー: Client ID または OAuth 設定を確認してください`
+- `認証画面を開けませんでした...`
+- `認証画面が閉じられました...`
+- `認証エラー: state が一致しません`
+- `認証エラー: access token を受け取れませんでした`
 
 ---
 
-## 6. UI/デザイン仕様
+## 6. UI / デザイン仕様
 
-### 6-1. デザインシステム
+### 6-1. デザイン
 
 | 要素 | 値 |
 |------|-----|
-| テーマ | ダークモード固定 |
-| 背景色 | `#0f0f14`（メイン）、`#1a1a24`（サーフェス）、`#22222e`（浮上） |
-| テキスト色 | `#e0d6c8`（主）、`#9a9aae`（副）、`#6a6a7e`（ミュート） |
-| アクセント色 | `#7c6f5b`（暖色系ブラウン） |
+| テーマ | ダーク固定 |
+| 背景色 | `#0f0f14`, `#1a1a24`, `#22222e` |
+| テキスト色 | `#e0d6c8`, `#9a9aae`, `#6a6a7e` |
+| アクセント色 | `#7c6f5b` |
 | ボーダー | `#2d2d3d` |
-| 角丸 | 12px（通常）、8px（小） |
-| フォント | Montserrat（英字）、Hiragino Sans（日本語フォールバック） |
+| 角丸 | 12px / 8px |
+| フォント | Montserrat / Hiragino Sans |
 
-### 6-2. PWA 設定
+### 6-2. PWA メタ
 
-| 項目 | 値 |
-|------|-----|
-| apple-mobile-web-app-capable | yes |
-| apple-mobile-web-app-status-bar-style | black-translucent |
-| apple-mobile-web-app-title | DriveMD |
-| apple-touch-icon | 紫グラデーション背景 + フォルダ&三角形シンボル（SVG base64） |
+- `apple-mobile-web-app-capable: yes`
+- `apple-mobile-web-app-status-bar-style: black-translucent`
+- `apple-mobile-web-app-title: DriveMD`
+- `apple-touch-icon` は base64 SVG
 
-### 6-3. Safe Area 対応
+### 6-3. Safe Area
 
-- `env(safe-area-inset-top)` でノッチ/ダイナミックアイランド対応
-- `env(safe-area-inset-bottom)` でホームバー対応
-- ファイルリスト下部に safe-bottom + 80px のパディング（FAB との重なり防止）
-
-### 6-4. アニメーション
-
-| 対象 | アニメーション |
-|------|---------------|
-| モーダル表示 | fadeIn 0.2s + slideUp 0.3s（cubic-bezier） |
-| TOC パネル | right プロパティの 0.3s トランジション |
-| ボタンホバー | background-color 0.15s トランジション |
-| FAB タップ | scale(0.92) 0.15s |
-| トースト | opacity 0.3s、2.5秒後に自動非表示 |
+- `safe-area-inset-top`
+- `safe-area-inset-bottom`
+- FAB とホームバーの重なり回避済み
 
 ---
 
 ## 7. API 仕様
-
-### 7-1. 使用 API エンドポイント
 
 | 用途 | エンドポイント | メソッド |
 |------|---------------|----------|
@@ -265,68 +196,45 @@ GFM（GitHub Flavored Markdown）対応。改行は `breaks: true` で処理。
 | ファイル更新 | `googleapis.com/upload/drive/v3/files/{id}?uploadType=multipart` | PATCH |
 | ファイル作成 | `googleapis.com/upload/drive/v3/files?uploadType=multipart` | POST |
 
-### 7-2. ファイル一覧取得パラメータ
+一覧取得パラメータ:
 
-```
+```text
 q: '{folderId}' in parents and trashed = false
 fields: files(id,name,mimeType,modifiedTime,size,parents),nextPageToken
 pageSize: 200
 orderBy: folder,name
 ```
 
-ページネーション対応（nextPageToken で全件取得）。
+---
 
-### 7-3. ファイル保存形式
+## 8. 動作確認状況
 
-Multipart upload（boundary 区切り）:
-- Part 1: `application/json` — メタデータ（name）
-- Part 2: `text/markdown` — ファイル内容
+### 8-1. 確認済み
+
+- GitHub Pages 公開
+- GCP Project 作成
+- Google Drive API 有効化
+- OAuth 同意画面作成
+- Web application の OAuth client 作成
+- Desktop Chrome で Google OAuth 画面までは到達
+
+### 8-2. 未完了
+
+- Desktop Chrome で Drive 一覧まで安定して到達する最終確認
+- iOS Safari での OAuth 完了
+- iOS Chrome での OAuth 完了
+- ホーム画面追加後の導線確認
 
 ---
 
-## 8. エラーハンドリング
+## 9. 既知の問題
 
-| エラー | 対応 |
-|--------|------|
-| 401 Unauthorized | トースト「セッション切れ。再ログインしてください。」→ ログイン画面に遷移 |
-| API エラー（その他） | トースト「読み込みエラー」+ エラーメッセージ表示 |
-| GIS 初期化失敗 | トースト「GIS の初期化に失敗しました」 |
-| Client ID 未設定でログイン試行 | 設定モーダルを表示 + トースト「先にClient IDを設定してください」 |
-| ファイル保存失敗 | トースト「保存エラー: {message}」 |
-| ファイル作成失敗 | トースト「作成エラー: {message}」 |
-
----
-
-## 9. 画面遷移図
-
-```
-ログイン画面
-  │
-  ├─ [Googleアカウントで接続] → Google OAuth → ファイル一覧画面
-  │
-  └─ [Client ID設定] → 設定モーダル → ログイン画面
-
-ファイル一覧画面
-  │
-  ├─ [フォルダタップ] → ファイル一覧画面（サブフォルダ）
-  ├─ [.md ファイルタップ] → Markdown ビューア
-  ├─ [+ FAB] → 新規ファイルモーダル → エディタ画面
-  ├─ [ブックマークタブ] → ブックマーク一覧
-  ├─ [アバタータップ] → ログアウト確認 → ログイン画面
-  └─ [戻るボタン] → 親フォルダ
-
-Markdown ビューア
-  │
-  ├─ [戻るボタン] → ファイル一覧画面
-  ├─ [編集ボタン] → エディタ画面
-  ├─ [目次ボタン] → TOC パネル（オーバーレイ）
-  └─ [ブックマークボタン] → トグル
-
-エディタ画面
-  │
-  ├─ [× ボタン] → Markdown ビューア（変更破棄）
-  └─ [保存ボタン] → Drive に保存 → Markdown ビューア（再レンダリング）
-```
+| 問題 | 状態 |
+|------|------|
+| iOS Safari で `401: invalid_client` | 未解決 |
+| iOS Chrome で `401: invalid_client` | 未解決 |
+| Desktop Chrome では認証画面を通過できるが、一覧遷移の最終確認が未完 | 調査中 |
+| `userinfo` 取得失敗時のログイン巻き戻り | 暫定対応済み |
 
 ---
 
@@ -334,28 +242,24 @@ Markdown ビューア
 
 | 制限 | 詳細 |
 |------|------|
-| オフライン非対応 | Service Worker 未実装。ネットワーク接続が常に必要 |
-| セッション永続化なし | ページリロード/アプリ再起動で再認証が必要 |
-| テストモードの警告 | ログイン時に「確認されていないアプリ」警告が表示される |
-| テストモードのトークン期限 | 7日で期限切れ、再ログインが必要 |
-| Markdown 以外のファイル | .md / .markdown 以外のファイルはプレビュー不可（一覧には表示される） |
-| 画像の相対パス | Markdown 内の相対パス画像は表示不可（Drive の URL 直指定は可能） |
-| 同時編集 | 排他制御なし。複数デバイスからの同時編集は最後の保存が勝つ |
-| Client ID の共有 | 友人に Client ID を別途伝達する必要がある |
+| オフライン非対応 | Service Worker 未実装 |
+| セッション永続化なし | 再読み込みや再起動で再認証が必要 |
+| テストモード警告 | 未確認アプリ警告が出る |
+| テストモードのトークン期限 | 7日で再ログイン |
+| Markdown 以外のプレビュー | 未対応 |
+| 画像相対パス | 未対応 |
+| 同時編集 | 最後の保存が勝つ |
+| iOS 認証 | 現在不安定 |
 
 ---
 
-## 11. 将来の拡張候補（v2 以降）
+## 11. 今後の方針
 
-| 機能 | 優先度 | 概要 |
-|------|--------|------|
-| Client ID 埋め込みオプション | 高 | HTML に直接埋め込んで設定画面を省略する方法A への切替 |
-| Service Worker | 高 | オフラインキャッシュ、バックグラウンド同期 |
-| トークン永続化 | 高 | セッションストレージ/リフレッシュトークンでリロード後も維持 |
-| Markdown 以外のプレビュー | 中 | .txt、.json、.yaml などのプレーンテキストファイル対応 |
-| ライトモード | 中 | テーマ切替機能 |
-| フォルダ検索 | 中 | 現在フォルダ内だけでなく Drive 全体をファイル内容で全文検索 |
-| エディタ強化 | 中 | Markdown ツールバー（太字、リンク、見出し等のショートカット） |
-| Split View | 低 | エディタとプレビューの左右分割表示 |
-| 共有リンク生成 | 低 | Drive のファイル共有リンクをアプリ内から発行 |
-| Mermaid / KaTeX | 低 | 図表・数式のレンダリング対応 |
+優先順:
+
+1. iOS Safari / iOS Chrome の `invalid_client` 原因特定
+2. Desktop と iOS の認証差分を切り分け
+3. 必要なら認証を backend 付き code flow に移行
+4. Client ID の埋め込みまたは設定簡略化
+5. Service Worker とオフライン検討
+
