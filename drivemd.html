@@ -496,8 +496,6 @@ const APP = {
   searchQuery: '',
   activeTab: 'files',
   tokenClient: null,
-  authTimer: null,
-  authInFlight: false,
 };
 
 const SCOPES = 'https://www.googleapis.com/auth/drive';
@@ -519,7 +517,6 @@ function initGIS() {
 }
 
 function onTokenResponse(resp) {
-  clearAuthState();
   if (resp.error) {
     if (resp.error === 'invalid_client') {
       showToast('認証エラー: Client ID または OAuth 設定を確認してください');
@@ -535,7 +532,6 @@ function onTokenResponse(resp) {
 }
 
 function onTokenError(err) {
-  clearAuthState();
   const msg = err && err.type ? err.type : 'unknown_error';
   if (msg === 'popup_failed_to_open') {
     showToast('認証画面を開けませんでした。Safari/Chrome の通常タブで再試行してください');
@@ -543,14 +539,6 @@ function onTokenError(err) {
     showToast('認証画面が閉じられました。もう一度お試しください');
   } else {
     showToast('認証エラー: ' + msg);
-  }
-}
-
-function clearAuthState() {
-  APP.authInFlight = false;
-  if (APP.authTimer) {
-    clearTimeout(APP.authTimer);
-    APP.authTimer = null;
   }
 }
 
@@ -575,20 +563,7 @@ function handleLogin() {
     showToast('先にClient IDを設定してください');
     return;
   }
-  if (!APP.tokenClient) initGIS();
-  if (APP.tokenClient) {
-    clearAuthState();
-    APP.authInFlight = true;
-    showToast('Google 認証画面を開いています…');
-    APP.authTimer = setTimeout(() => {
-      if (!APP.authInFlight) return;
-      APP.authInFlight = false;
-      showToast('認証結果を受け取れませんでした。Safari/Chrome の通常タブで再試行してください');
-    }, 15000);
-    APP.tokenClient.requestAccessToken({ prompt: 'consent' });
-  } else {
-    showToast('GIS の初期化に失敗しました');
-  }
+  startRedirectAuth();
 }
 
 function handleLogout() {
@@ -606,6 +581,7 @@ function handleLogout() {
 
 // Wait for GIS library
 window.addEventListener('load', () => {
+  handleRedirectAuthResult();
   const ci = localStorage.getItem('drivemd_client_id');
   if (ci) {
     APP.clientId = ci;
@@ -618,6 +594,55 @@ window.addEventListener('load', () => {
     }, 200);
   }
 });
+
+function startRedirectAuth() {
+  const redirectUri = window.location.origin + window.location.pathname;
+  const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
+  sessionStorage.setItem('drivemd_oauth_state', state);
+
+  const params = new URLSearchParams({
+    client_id: APP.clientId,
+    redirect_uri: redirectUri,
+    response_type: 'token',
+    scope: SCOPES,
+    state: state,
+    prompt: 'consent',
+  });
+
+  window.location.assign('https://accounts.google.com/o/oauth2/v2/auth?' + params.toString());
+}
+
+function handleRedirectAuthResult() {
+  if (!window.location.hash || !window.location.hash.includes('access_token') && !window.location.hash.includes('error')) {
+    return;
+  }
+
+  const hash = new URLSearchParams(window.location.hash.slice(1));
+  const error = hash.get('error');
+  const state = hash.get('state');
+  const expectedState = sessionStorage.getItem('drivemd_oauth_state');
+
+  history.replaceState(null, '', window.location.pathname + window.location.search);
+  sessionStorage.removeItem('drivemd_oauth_state');
+
+  if (!state || !expectedState || state !== expectedState) {
+    showToast('認証エラー: state が一致しません');
+    return;
+  }
+
+  if (error) {
+    showToast('認証エラー: ' + error);
+    return;
+  }
+
+  const accessToken = hash.get('access_token');
+  if (!accessToken) {
+    showToast('認証エラー: access token を受け取れませんでした');
+    return;
+  }
+
+  onTokenResponse({ access_token: accessToken });
+}
 
 // ═══ API HELPERS ═══
 async function gFetch(url, opts = {}) {
