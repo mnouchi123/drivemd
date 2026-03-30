@@ -496,6 +496,8 @@ const APP = {
   searchQuery: '',
   activeTab: 'files',
   tokenClient: null,
+  authTimer: null,
+  authInFlight: false,
 };
 
 const SCOPES = 'https://www.googleapis.com/auth/drive';
@@ -509,6 +511,7 @@ function initGIS() {
       client_id: APP.clientId,
       scope: SCOPES,
       callback: onTokenResponse,
+      error_callback: onTokenError,
     });
   } catch(e) {
     console.error('GIS init error', e);
@@ -516,14 +519,39 @@ function initGIS() {
 }
 
 function onTokenResponse(resp) {
+  clearAuthState();
   if (resp.error) {
-    showToast('認証エラー: ' + resp.error);
+    if (resp.error === 'invalid_client') {
+      showToast('認証エラー: Client ID または OAuth 設定を確認してください');
+    } else {
+      showToast('認証エラー: ' + resp.error);
+    }
     return;
   }
   APP.token = resp.access_token;
   fetchUserInfo();
   showScreen('list-screen');
   loadFolder();
+}
+
+function onTokenError(err) {
+  clearAuthState();
+  const msg = err && err.type ? err.type : 'unknown_error';
+  if (msg === 'popup_failed_to_open') {
+    showToast('認証画面を開けませんでした。Safari/Chrome の通常タブで再試行してください');
+  } else if (msg === 'popup_closed') {
+    showToast('認証画面が閉じられました。もう一度お試しください');
+  } else {
+    showToast('認証エラー: ' + msg);
+  }
+}
+
+function clearAuthState() {
+  APP.authInFlight = false;
+  if (APP.authTimer) {
+    clearTimeout(APP.authTimer);
+    APP.authTimer = null;
+  }
 }
 
 async function fetchUserInfo() {
@@ -543,7 +571,15 @@ function handleLogin() {
   }
   if (!APP.tokenClient) initGIS();
   if (APP.tokenClient) {
-    APP.tokenClient.requestAccessToken();
+    clearAuthState();
+    APP.authInFlight = true;
+    showToast('Google 認証画面を開いています…');
+    APP.authTimer = setTimeout(() => {
+      if (!APP.authInFlight) return;
+      APP.authInFlight = false;
+      showToast('認証結果を受け取れませんでした。Safari/Chrome の通常タブで再試行してください');
+    }, 15000);
+    APP.tokenClient.requestAccessToken({ prompt: 'consent' });
   } else {
     showToast('GIS の初期化に失敗しました');
   }
