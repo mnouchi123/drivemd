@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="DriveMD">
+<link rel="apple-touch-icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxODAgMTgwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImJnSWNvbiIgeDE9IjAiIHkxPSIwIiB4Mj0iMSIgeTI9IjEiPjxzdG9wIG9mZnNldD0iMCUiIHN0b3AtY29sb3I9IiM0YzFkOTUiLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0b3AtY29sb3I9IiMxZTFiNGIiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48cmVjdCB3aWR0aD0iMTgwIiBoZWlnaHQ9IjE4MCIgcng9IjQwIiBmaWxsPSJ1cmwoI2JnSWNvbikiLz48cGF0aCBkPSJNIDM2IDQ4IEwgNzQgNDggQyA3NyA0OCA4MCA1MCA4MiA1MyBMIDg4IDYxIEMgOTAgNjQgOTMgNjYgOTYgNjYgTCAxNDQgNjYgQyAxNTAgNjYgMTU0IDcwIDE1NCA3NiBMIDE1NCAxMjIgQyAxNTQgMTI4IDE1MCAxMzIgMTQ0IDEzMiBMIDM2IDEzMiBDIDMwIDEzMiAyNiAxMjggMjYgMTIyIEwgMjYgNTggQyAyNiA1MiAzMCA0OCAzNiA0OCBaIE0gNzIgNzAgTCA4NCA4NyBMIDYwIDg3IFogTSAxMDggNzAgTCAxMjAgODcgTCA5NiA4NyBaIE0gNzIgOTIgTCA5MCAxMTggTCA1NCAxMTggWiBNIDEwOCA5MiBMIDEyNiAxMTggTCA5MCAxMTggWiIgZmlsbD0iI2ZmZmZmZiIgZmlsbC1ydWxlPSJldmVub2RkIi8+PC9zdmc+Cg==">
+<title>DriveMD</title>
+
+<!-- M PLUS Rounded 1c - rounded gothic font -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<!-- Marked.js for Markdown -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<!-- highlight.js for syntax highlighting -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
+<style>
+:root {
+  --bg: #0f0f14;
+  --bg-surface: #1a1a24;
+  --bg-elevated: #22222e;
+  --bg-hover: #2a2a38;
+  --border: #2d2d3d;
+  --border-light: #3a3a4d;
+  --text-primary: #e0d6c8;
+  --text-secondary: #9a9aae;
+  --text-muted: #6a6a7e;
+  --accent: #7c6f5b;
+  --accent-hover: #9a8b74;
+  --accent-glow: rgba(124,111,91,0.15);
+  --blue: #5b7c9a;
+  --green: #5b9a6f;
+  --red: #c4746e;
+  --yellow: #c4a84e;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --header-h: 56px;
+  --toolbar-h: 48px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Hiragino Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  overflow: hidden;
+  height: 100vh;
+  height: 100dvh;
+  position: fixed;
+  width: 100%;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══ SCREENS ═══ */
+.screen { display:none; flex-direction:column; height:100dvh; position:absolute; inset:0; background:var(--bg); z-index:1; }
+.screen.active { display:flex; z-index:2; }
+
+/* ═══ HEADER ═══ */
+.header {
+  display:flex; align-items:center; gap:12px;
+  padding: calc(var(--safe-top) + 8px) 16px 8px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  min-height: calc(var(--header-h) + var(--safe-top));
+  flex-shrink: 0;
+}
+.header-title { font-size:17px; font-weight:600; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.header-btn {
+  width:36px; height:36px; border:none; background:none; color:var(--text-primary);
+  display:flex; align-items:center; justify-content:center; border-radius:var(--radius-sm);
+  cursor:pointer; flex-shrink:0; font-size:20px;
+  transition: background .15s;
+}
+.header-btn:hover, .header-btn:active { background:var(--bg-hover); }
+.header-btn svg { width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+
+/* ═══ LOGIN SCREEN ═══ */
+#login-screen {
+  justify-content:center; align-items:center; gap:32px;
+  background: linear-gradient(160deg, var(--bg) 0%, #16161f 100%);
+}
+.login-logo {
+  font-size:48px; font-weight:700; letter-spacing:-2px;
+  color: var(--text-primary);
+  font-family: 'Montserrat', sans-serif;
+}
+.login-logo span { color:var(--accent); }
+.login-sub { color:var(--text-secondary); font-size:14px; margin-top:-20px; text-align:center; line-height:1.6; }
+.login-btn {
+  display:flex; align-items:center; gap:10px;
+  padding:14px 28px; border-radius:var(--radius);
+  background:var(--bg-elevated); border:1px solid var(--border);
+  color:var(--text-primary); font-size:15px; font-weight:500;
+  cursor:pointer; transition: all .2s;
+}
+.login-btn:hover { background:var(--bg-hover); border-color:var(--border-light); }
+.login-btn svg { width:20px; height:20px; }
+.login-settings {
+  position:absolute; bottom:calc(var(--safe-bottom) + 24px);
+  color:var(--text-muted); font-size:13px; cursor:pointer;
+  text-decoration:underline; text-underline-offset:3px;
+}
+
+/* ═══ SETTINGS MODAL ═══ */
+.modal-overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,.6);
+  z-index:100; align-items:flex-end; justify-content:center;
+  animation: fadeIn .2s;
+}
+.modal-overlay.show { display:flex; }
+.modal-sheet {
+  background:var(--bg-surface); border-radius:var(--radius) var(--radius) 0 0;
+  width:100%; max-width:480px; max-height:70vh; padding:24px 20px calc(var(--safe-bottom) + 24px);
+  animation: slideUp .3s cubic-bezier(.22,1,.36,1);
+}
+.modal-handle { width:36px; height:4px; background:var(--border-light); border-radius:2px; margin:0 auto 20px; }
+.modal-title { font-size:17px; font-weight:600; margin-bottom:16px; }
+.input-group { margin-bottom:16px; }
+.input-label { font-size:13px; color:var(--text-secondary); margin-bottom:6px; display:block; }
+.input-field {
+  width:100%; padding:12px 14px; background:var(--bg-elevated); border:1px solid var(--border);
+  border-radius:var(--radius-sm); color:var(--text-primary); font-size:15px; outline:none;
+  transition: border-color .2s;
+}
+.input-field:focus { border-color:var(--accent); }
+.modal-btn {
+  width:100%; padding:14px; border:none; border-radius:var(--radius-sm);
+  background:var(--accent); color:#fff; font-size:15px; font-weight:600;
+  cursor:pointer; transition: background .2s;
+}
+.modal-btn:hover { background:var(--accent-hover); }
+
+/* ═══ FILE LIST SCREEN ═══ */
+.toolbar {
+  display:flex; align-items:center; gap:8px;
+  padding:8px 12px; background:var(--bg-surface);
+  border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.search-box {
+  flex:1; display:flex; align-items:center; gap:8px;
+  background:var(--bg-elevated); border:1px solid var(--border);
+  border-radius:var(--radius-sm); padding:0 12px; height:38px;
+  transition: border-color .2s;
+}
+.search-box:focus-within { border-color:var(--accent); }
+.search-box svg { width:16px; height:16px; stroke:var(--text-muted); fill:none; stroke-width:2; flex-shrink:0; }
+.search-box input {
+  flex:1; border:none; background:none; color:var(--text-primary);
+  font-size:14px; outline:none;
+}
+.search-box input::placeholder { color:var(--text-muted); }
+
+.sort-btn {
+  height:38px; padding:0 12px; border:1px solid var(--border);
+  background:var(--bg-elevated); border-radius:var(--radius-sm);
+  color:var(--text-secondary); font-size:12px; cursor:pointer;
+  display:flex; align-items:center; gap:4px; white-space:nowrap;
+  transition: all .15s;
+}
+.sort-btn:hover { border-color:var(--border-light); color:var(--text-primary); }
+.sort-btn svg { width:14px; height:14px; stroke:currentColor; fill:none; stroke-width:2; }
+
+.tabs {
+  display:flex; gap:0; background:var(--bg-surface);
+  border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.tab {
+  flex:1; padding:10px 0; text-align:center; font-size:13px; font-weight:500;
+  color:var(--text-muted); cursor:pointer; border-bottom:2px solid transparent;
+  transition: all .2s;
+}
+.tab.active { color:var(--text-primary); border-bottom-color:var(--accent); }
+
+/* Breadcrumb */
+.breadcrumb {
+  display:flex; align-items:center; gap:4px; padding:8px 16px;
+  font-size:13px; color:var(--text-muted); overflow-x:auto;
+  flex-shrink:0; white-space:nowrap;
+  -webkit-overflow-scrolling: touch;
+}
+.breadcrumb::-webkit-scrollbar { display:none; }
+.bc-item { cursor:pointer; color:var(--text-secondary); transition:color .15s; flex-shrink:0; }
+.bc-item:hover { color:var(--text-primary); }
+.bc-sep { color:var(--border-light); flex-shrink:0; }
+.bc-current { color:var(--text-primary); font-weight:500; flex-shrink:0; }
+
+.file-list {
+  flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  padding-bottom:calc(var(--safe-bottom) + 80px);
+}
+
+.file-item {
+  display:flex; align-items:center; gap:14px;
+  padding:14px 16px; border-bottom:1px solid var(--border);
+  cursor:pointer; transition: background .15s;
+}
+.file-item:active { background:var(--bg-hover); }
+.file-icon {
+  width:40px; height:40px; border-radius:var(--radius-sm);
+  display:flex; align-items:center; justify-content:center;
+  flex-shrink:0; font-size:18px;
+}
+.file-icon.folder { background:rgba(91,124,154,.15); color:var(--blue); }
+.file-icon.md { background:rgba(124,111,91,.15); color:var(--accent); }
+.file-icon.other { background:var(--bg-elevated); color:var(--text-muted); }
+.file-icon svg { width:22px; height:22px; stroke:currentColor; fill:none; stroke-width:1.8; }
+.file-info { flex:1; min-width:0; }
+.file-name { font-size:15px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.file-meta { font-size:12px; color:var(--text-muted); margin-top:2px; }
+.file-bookmark {
+  width:32px; height:32px; display:flex; align-items:center; justify-content:center;
+  border:none; background:none; cursor:pointer; flex-shrink:0;
+  color:var(--text-muted); transition:color .15s;
+}
+.file-bookmark.active { color:var(--yellow); }
+.file-bookmark svg { width:18px; height:18px; stroke:currentColor; fill:none; stroke-width:2; }
+.file-bookmark.active svg { fill:var(--yellow); }
+
+.empty-state {
+  flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  color:var(--text-muted); gap:8px; padding:40px;
+}
+.empty-state svg { width:48px; height:48px; stroke:var(--border-light); fill:none; stroke-width:1.2; }
+
+/* FAB */
+.fab {
+  position:fixed; bottom:calc(var(--safe-bottom) + 24px); right:20px;
+  width:52px; height:52px; border-radius:50%; border:none;
+  background:var(--accent); color:#fff; font-size:28px;
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; box-shadow:0 4px 20px rgba(124,111,91,.3);
+  transition: transform .15s, background .15s; z-index:10;
+}
+.fab:active { transform:scale(.92); }
+
+/* ═══ VIEWER SCREEN ═══ */
+.viewer-content {
+  flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
+  padding: 20px 18px calc(var(--safe-bottom) + 20px);
+  font-size: 15.5px; line-height: 1.75;
+}
+
+/* Markdown Styles */
+.viewer-content h1 { font-size:24px; font-weight:700; margin:28px 0 14px; color:var(--text-primary); border-bottom:1px solid var(--border); padding-bottom:8px; }
+.viewer-content h2 { font-size:20px; font-weight:600; margin:24px 0 12px; color:var(--text-primary); }
+.viewer-content h3 { font-size:17px; font-weight:600; margin:20px 0 10px; color:var(--text-primary); }
+.viewer-content h4, .viewer-content h5, .viewer-content h6 { font-size:15px; font-weight:600; margin:16px 0 8px; }
+.viewer-content p { margin:0 0 14px; }
+.viewer-content a { color:var(--blue); text-decoration:none; }
+.viewer-content a:hover { text-decoration:underline; }
+.viewer-content ul, .viewer-content ol { padding-left:24px; margin:0 0 14px; }
+.viewer-content li { margin:4px 0; }
+.viewer-content blockquote {
+  border-left:3px solid var(--accent); padding:8px 16px; margin:0 0 14px;
+  background:var(--accent-glow); color:var(--text-secondary); border-radius:0 var(--radius-sm) var(--radius-sm) 0;
+}
+.viewer-content code {
+  background:var(--bg-elevated); padding:2px 6px; border-radius:4px;
+  font-family:'SF Mono','Menlo',monospace; font-size:13.5px; color:var(--accent-hover);
+}
+.viewer-content pre {
+  background:#161620; border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:16px; margin:0 0 14px; overflow-x:auto; -webkit-overflow-scrolling:touch;
+}
+.viewer-content pre code { background:none; padding:0; color:var(--text-primary); font-size:13px; line-height:1.6; }
+.viewer-content table { width:100%; border-collapse:collapse; margin:0 0 14px; font-size:14px; }
+.viewer-content th, .viewer-content td { border:1px solid var(--border); padding:8px 12px; text-align:left; }
+.viewer-content th { background:var(--bg-elevated); font-weight:600; }
+.viewer-content img { max-width:100%; height:auto; border-radius:var(--radius-sm); }
+.viewer-content hr { border:none; border-top:1px solid var(--border); margin:20px 0; }
+
+/* TOC Panel */
+.toc-panel {
+  position:fixed; top:0; right:-300px; width:280px; height:100dvh;
+  background:var(--bg-surface); border-left:1px solid var(--border);
+  z-index:50; transition:right .3s cubic-bezier(.22,1,.36,1);
+  display:flex; flex-direction:column;
+  padding-top:var(--safe-top);
+}
+.toc-panel.open { right:0; }
+.toc-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:49; }
+.toc-overlay.show { display:block; }
+.toc-header { padding:16px; border-bottom:1px solid var(--border); font-weight:600; font-size:15px; display:flex; justify-content:space-between; align-items:center; }
+.toc-list { flex:1; overflow-y:auto; padding:12px 0; }
+.toc-item {
+  display:block; padding:8px 16px; font-size:14px; color:var(--text-secondary);
+  cursor:pointer; transition:all .15s; text-decoration:none; border:none; background:none; width:100%; text-align:left;
+}
+.toc-item:hover, .toc-item:active { background:var(--bg-hover); color:var(--text-primary); }
+.toc-item[data-level="2"] { padding-left:32px; font-size:13px; }
+.toc-item[data-level="3"] { padding-left:48px; font-size:12px; color:var(--text-muted); }
+
+/* ═══ EDITOR SCREEN ═══ */
+.editor-area {
+  flex:1; overflow:hidden; display:flex; flex-direction:column;
+}
+.editor-textarea {
+  flex:1; width:100%; border:none; background:var(--bg);
+  color:var(--text-primary); font-family:'SF Mono','Menlo',monospace;
+  font-size:14px; line-height:1.7; padding:16px 18px calc(var(--safe-bottom) + 20px);
+  resize:none; outline:none;
+  -webkit-overflow-scrolling:touch;
+}
+
+/* ═══ NEW FILE MODAL ═══ */
+.new-file-modal .modal-sheet { max-height:50vh; }
+
+/* ═══ LOADING ═══ */
+.spinner {
+  width:24px; height:24px; border:2.5px solid var(--border);
+  border-top-color:var(--accent); border-radius:50%;
+  animation:spin .7s linear infinite; margin:40px auto;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+@keyframes fadeIn { from{opacity:0}to{opacity:1} }
+@keyframes slideUp { from{transform:translateY(100%)}to{transform:translateY(0)} }
+
+/* ═══ TOAST ═══ */
+.toast {
+  position:fixed; bottom:calc(var(--safe-bottom) + 80px); left:50%; transform:translateX(-50%);
+  background:var(--bg-elevated); border:1px solid var(--border);
+  padding:10px 20px; border-radius:var(--radius); font-size:14px;
+  color:var(--text-primary); z-index:200; opacity:0; transition:opacity .3s;
+  pointer-events:none;
+}
+.toast.show { opacity:1; }
+
+/* ═══ USER AVATAR ═══ */
+.user-avatar {
+  width:32px; height:32px; border-radius:50%; border:2px solid var(--border);
+  cursor:pointer; object-fit:cover;
+}
+
+/* ═══ SCROLLBAR ═══ */
+::-webkit-scrollbar { width:4px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
+</style>
+</head>
+
+<body>
+
+<!-- ═══ LOGIN SCREEN ═══ -->
+<div id="login-screen" class="screen active">
+  <div class="login-logo">Drive<span>MD</span></div>
+  <p class="login-sub">Google DriveのMarkdownを<br>美しく閲覧・編集</p>
+  <button class="login-btn" id="login-btn" onclick="handleLogin()">
+    <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+    Googleアカウントで接続
+  </button>
+  <div class="login-settings" onclick="showSettings()">Client ID設定</div>
+</div>
+
+<!-- ═══ FILE LIST SCREEN ═══ -->
+<div id="list-screen" class="screen">
+  <div class="header">
+    <button class="header-btn" id="back-folder-btn" onclick="goUpFolder()" style="display:none">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="header-title" id="list-title">マイドライブ</div>
+    <button class="header-btn" onclick="refreshList()">
+      <svg viewBox="0 0 24 24"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
+    </button>
+    <img class="user-avatar" id="user-avatar" src="" onclick="handleLogout()" title="ログアウト" style="display:none">
+  </div>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search-input" placeholder="ファイル名で検索..." oninput="handleSearch()">
+    </div>
+    <button class="sort-btn" onclick="toggleSort()">
+      <span id="sort-label">名前</span>
+      <svg id="sort-icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+    </button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="files" onclick="switchTab('files')">ファイル</div>
+    <div class="tab" data-tab="bookmarks" onclick="switchTab('bookmarks')">ブックマーク</div>
+  </div>
+
+  <div class="breadcrumb" id="breadcrumb"></div>
+
+  <div class="file-list" id="file-list"></div>
+
+  <button class="fab" onclick="showNewFileModal()" title="新規ファイル">+</button>
+</div>
+
+<!-- ═══ VIEWER SCREEN ═══ -->
+<div id="viewer-screen" class="screen">
+  <div class="header">
+    <button class="header-btn" onclick="closeViewer()">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <div class="header-title" id="viewer-title">document.md</div>
+    <button class="header-btn" id="viewer-bookmark-btn" onclick="toggleViewerBookmark()">
+      <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+    </button>
+    <button class="header-btn" onclick="toggleToc()">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <button class="header-btn" onclick="editFile()">
+      <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+    </button>
+  </div>
+  <div class="viewer-content" id="viewer-content"></div>
+  <div class="toc-overlay" id="toc-overlay" onclick="toggleToc()"></div>
+  <div class="toc-panel" id="toc-panel">
+    <div class="toc-header">
+      目次
+      <button class="header-btn" onclick="toggleToc()" style="width:28px;height:28px;">
+        <svg viewBox="0 0 24 24" style="width:18px;height:18px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="toc-list" id="toc-list"></div>
+  </div>
+</div>
+
+<!-- ═══ EDITOR SCREEN ═══ -->
+<div id="editor-screen" class="screen">
+  <div class="header">
+    <button class="header-btn" onclick="cancelEdit()">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="header-title" id="editor-title">編集</div>
+    <button class="header-btn" onclick="saveFile()" style="color:var(--green);font-weight:700;">
+      <svg viewBox="0 0 24 24" style="stroke:var(--green);"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    </button>
+  </div>
+  <div class="editor-area">
+    <textarea class="editor-textarea" id="editor-textarea" spellcheck="false"></textarea>
+  </div>
+</div>
+
+<!-- ═══ SETTINGS MODAL ═══ -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Google API 設定</div>
+    <div class="input-group">
+      <label class="input-label">OAuth 2.0 Client ID</label>
+      <input type="text" class="input-field" id="client-id-input" placeholder="xxxx.apps.googleusercontent.com">
+    </div>
+    <div class="input-group">
+      <label class="input-label" style="font-size:12px;color:var(--text-muted);line-height:1.5;">
+        GCPコンソール → APIとサービス → 認証情報 → OAuth 2.0 クライアントIDを作成<br>
+        承認済みリダイレクトURIにこのページのURLを追加してください
+      </label>
+    </div>
+    <button class="modal-btn" onclick="saveSettings()">保存</button>
+  </div>
+</div>
+
+<!-- ═══ NEW FILE MODAL ═══ -->
+<div class="modal-overlay new-file-modal" id="new-file-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">新規Markdownファイル</div>
+    <div class="input-group">
+      <label class="input-label">ファイル名</label>
+      <input type="text" class="input-field" id="new-file-name" placeholder="example">
+      <span style="font-size:12px;color:var(--text-muted);margin-top:4px;display:block;">.md は自動的に追加されます</span>
+    </div>
+    <button class="modal-btn" onclick="createNewFile()">作成</button>
+  </div>
+</div>
+
+<!-- ═══ TOAST ═══ -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══ STATE ═══
+const APP = {
+  clientId: localStorage.getItem('drivemd_client_id') || '',
+  token: null,
+  user: null,
+  files: [],
+  folderStack: [{ id:'root', name:'マイドライブ' }],
+  currentFile: null,
+  currentContent: '',
+  bookmarks: JSON.parse(localStorage.getItem('drivemd_bookmarks') || '{}'),
+  sortKey: 'name',
+  sortAsc: true,
+  searchQuery: '',
+  activeTab: 'files',
+  tokenClient: null,
+};
+
+const SCOPES = 'https://www.googleapis.com/auth/drive';
+const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/drive/v3/rest';
+
+// ═══ INIT ═══
+function initGIS() {
+  if (!APP.clientId) return;
+  try {
+    APP.tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: APP.clientId,
+      scope: SCOPES,
+      callback: onTokenResponse,
+    });
+  } catch(e) {
+    console.error('GIS init error', e);
+  }
+}
+
+function onTokenResponse(resp) {
+  if (resp.error) {
+    showToast('認証エラー: ' + resp.error);
+    return;
+  }
+  APP.token = resp.access_token;
+  fetchUserInfo();
+  showScreen('list-screen');
+  loadFolder();
+}
+
+async function fetchUserInfo() {
+  try {
+    const r = await gFetch('https://www.googleapis.com/oauth2/v2/userinfo');
+    APP.user = r;
+    const av = document.getElementById('user-avatar');
+    if (r.picture) { av.src = r.picture; av.style.display = 'block'; }
+  } catch(e) {}
+}
+
+function handleLogin() {
+  if (!APP.clientId) {
+    showSettings();
+    showToast('先にClient IDを設定してください');
+    return;
+  }
+  if (!APP.tokenClient) initGIS();
+  if (APP.tokenClient) {
+    APP.tokenClient.requestAccessToken();
+  } else {
+    showToast('GIS の初期化に失敗しました');
+  }
+}
+
+function handleLogout() {
+  if (!confirm('ログアウトしますか？')) return;
+  if (APP.token) {
+    google.accounts.oauth2.revoke(APP.token);
+  }
+  APP.token = null;
+  APP.user = null;
+  APP.files = [];
+  APP.folderStack = [{ id:'root', name:'マイドライブ' }];
+  document.getElementById('user-avatar').style.display = 'none';
+  showScreen('login-screen');
+}
+
+// Wait for GIS library
+window.addEventListener('load', () => {
+  const ci = localStorage.getItem('drivemd_client_id');
+  if (ci) {
+    APP.clientId = ci;
+    document.getElementById('client-id-input').value = ci;
+    const waitGIS = setInterval(() => {
+      if (typeof google !== 'undefined' && google.accounts) {
+        clearInterval(waitGIS);
+        initGIS();
+      }
+    }, 200);
+  }
+});
+
+// ═══ API HELPERS ═══
+async function gFetch(url, opts = {}) {
+  const resp = await fetch(url, {
+    ...opts,
+    headers: {
+      'Authorization': 'Bearer ' + APP.token,
+      ...(opts.headers || {}),
+    }
+  });
+  if (resp.status === 401) {
+    showToast('セッション切れ。再ログインしてください。');
+    showScreen('login-screen');
+    throw new Error('Unauthorized');
+  }
+  if (!resp.ok) throw new Error('API Error: ' + resp.status);
+  return resp.json();
+}
+
+async function gFetchText(url, opts = {}) {
+  const resp = await fetch(url, {
+    ...opts,
+    headers: {
+      'Authorization': 'Bearer ' + APP.token,
+      ...(opts.headers || {}),
+    }
+  });
+  if (!resp.ok) throw new Error('API Error: ' + resp.status);
+  return resp.text();
+}
+
+// ═══ SCREEN NAV ═══
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ═══ SETTINGS ═══
+function showSettings() {
+  document.getElementById('client-id-input').value = APP.clientId;
+  document.getElementById('settings-modal').classList.add('show');
+}
+
+function saveSettings() {
+  const cid = document.getElementById('client-id-input').value.trim();
+  if (!cid) { showToast('Client IDを入力してください'); return; }
+  APP.clientId = cid;
+  localStorage.setItem('drivemd_client_id', cid);
+  document.getElementById('settings-modal').classList.remove('show');
+  initGIS();
+  showToast('設定を保存しました');
+}
+
+// Close modals on overlay click
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => {
+    if (e.target === m) m.classList.remove('show');
+  });
+});
+
+// ═══ FOLDER NAVIGATION ═══
+async function loadFolder(folderId) {
+  const id = folderId || APP.folderStack[APP.folderStack.length - 1].id;
+  const listEl = document.getElementById('file-list');
+  listEl.innerHTML = '<div class="spinner"></div>';
+
+  try {
+    let q = `'${id}' in parents and trashed = false`;
+    const fields = 'files(id,name,mimeType,modifiedTime,size,parents),nextPageToken';
+    let allFiles = [];
+    let pageToken = '';
+
+    do {
+      let url = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=${encodeURIComponent(fields)}&pageSize=200&orderBy=folder,name`;
+      if (pageToken) url += '&pageToken=' + pageToken;
+      const data = await gFetch(url);
+      allFiles = allFiles.concat(data.files || []);
+      pageToken = data.nextPageToken || '';
+    } while (pageToken);
+
+    APP.files = allFiles;
+    renderBreadcrumb();
+    renderFileList();
+
+    // Show/hide back button
+    document.getElementById('back-folder-btn').style.display =
+      APP.folderStack.length > 1 ? 'flex' : 'none';
+    document.getElementById('list-title').textContent =
+      APP.folderStack[APP.folderStack.length - 1].name;
+  } catch(e) {
+    listEl.innerHTML = `<div class="empty-state"><p>読み込みエラー</p><p style="font-size:12px">${e.message}</p></div>`;
+  }
+}
+
+function enterFolder(id, name) {
+  APP.folderStack.push({ id, name });
+  APP.searchQuery = '';
+  document.getElementById('search-input').value = '';
+  loadFolder(id);
+}
+
+function goUpFolder() {
+  if (APP.folderStack.length <= 1) return;
+  APP.folderStack.pop();
+  loadFolder();
+}
+
+function goToFolder(index) {
+  APP.folderStack = APP.folderStack.slice(0, index + 1);
+  loadFolder();
+}
+
+function refreshList() {
+  loadFolder();
+}
+
+// ═══ BREADCRUMB ═══
+function renderBreadcrumb() {
+  const el = document.getElementById('breadcrumb');
+  if (APP.folderStack.length <= 1) { el.innerHTML = ''; return; }
+  el.innerHTML = APP.folderStack.map((f, i) => {
+    if (i === APP.folderStack.length - 1) return `<span class="bc-current">${esc(f.name)}</span>`;
+    return `<span class="bc-item" onclick="goToFolder(${i})">${esc(f.name)}</span><span class="bc-sep">›</span>`;
+  }).join('');
+  el.scrollLeft = el.scrollWidth;
+}
+
+// ═══ RENDER FILES ═══
+function renderFileList() {
+  const listEl = document.getElementById('file-list');
+
+  if (APP.activeTab === 'bookmarks') {
+    renderBookmarks();
+    return;
+  }
+
+  let files = [...APP.files];
+
+  // Search filter
+  if (APP.searchQuery) {
+    const q = APP.searchQuery.toLowerCase();
+    files = files.filter(f => f.name.toLowerCase().includes(q));
+  }
+
+  // Sort
+  files.sort((a, b) => {
+    // Folders first
+    const aFolder = a.mimeType === 'application/vnd.google-apps.folder';
+    const bFolder = b.mimeType === 'application/vnd.google-apps.folder';
+    if (aFolder !== bFolder) return aFolder ? -1 : 1;
+
+    let cmp = 0;
+    if (APP.sortKey === 'name') {
+      cmp = a.name.localeCompare(b.name, 'ja');
+    } else {
+      cmp = (a.modifiedTime || '').localeCompare(b.modifiedTime || '');
+    }
+    return APP.sortAsc ? cmp : -cmp;
+  });
+
+  if (files.length === 0) {
+    listEl.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <p>${APP.searchQuery ? '検索結果なし' : 'ファイルがありません'}</p>
+    </div>`;
+    return;
+  }
+
+  listEl.innerHTML = files.map(f => {
+    const isFolder = f.mimeType === 'application/vnd.google-apps.folder';
+    const isMd = f.name.endsWith('.md') || f.name.endsWith('.markdown');
+    const iconClass = isFolder ? 'folder' : (isMd ? 'md' : 'other');
+    const iconSvg = isFolder
+      ? '<svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>'
+      : '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+    const date = f.modifiedTime ? formatDate(f.modifiedTime) : '';
+    const bm = APP.bookmarks[f.id] ? 'active' : '';
+    const onclick = isFolder
+      ? `onclick="enterFolder('${f.id}','${esc(f.name)}')"` 
+      : (isMd ? `onclick="openFile('${f.id}','${esc(f.name)}')"` : '');
+
+    return `<div class="file-item" ${onclick}>
+      <div class="file-icon ${iconClass}">${iconSvg}</div>
+      <div class="file-info">
+        <div class="file-name">${esc(f.name)}</div>
+        <div class="file-meta">${date}</div>
+      </div>
+      ${!isFolder ? `<button class="file-bookmark ${bm}" onclick="event.stopPropagation();toggleBookmark('${f.id}','${esc(f.name)}',this)">
+        <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+      </button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+// ═══ BOOKMARKS ═══
+function renderBookmarks() {
+  const listEl = document.getElementById('file-list');
+  const bms = Object.entries(APP.bookmarks);
+  if (bms.length === 0) {
+    listEl.innerHTML = `<div class="empty-state">
+      <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+      <p>ブックマークなし</p>
+    </div>`;
+    return;
+  }
+  listEl.innerHTML = bms.map(([id, name]) => {
+    return `<div class="file-item" onclick="openFile('${id}','${esc(name)}')">
+      <div class="file-icon md"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      <div class="file-info"><div class="file-name">${esc(name)}</div></div>
+      <button class="file-bookmark active" onclick="event.stopPropagation();removeBookmark('${id}')">
+        <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+      </button>
+    </div>`;
+  }).join('');
+}
+
+function toggleBookmark(id, name, btn) {
+  if (APP.bookmarks[id]) {
+    delete APP.bookmarks[id];
+    btn.classList.remove('active');
+  } else {
+    APP.bookmarks[id] = name;
+    btn.classList.add('active');
+  }
+  localStorage.setItem('drivemd_bookmarks', JSON.stringify(APP.bookmarks));
+}
+
+function removeBookmark(id) {
+  delete APP.bookmarks[id];
+  localStorage.setItem('drivemd_bookmarks', JSON.stringify(APP.bookmarks));
+  renderBookmarks();
+}
+
+function toggleViewerBookmark() {
+  if (!APP.currentFile) return;
+  const btn = document.getElementById('viewer-bookmark-btn');
+  if (APP.bookmarks[APP.currentFile.id]) {
+    delete APP.bookmarks[APP.currentFile.id];
+    btn.querySelector('svg').style.fill = 'none';
+    btn.style.color = '';
+  } else {
+    APP.bookmarks[APP.currentFile.id] = APP.currentFile.name;
+    btn.querySelector('svg').style.fill = 'var(--yellow)';
+    btn.style.color = 'var(--yellow)';
+  }
+  localStorage.setItem('drivemd_bookmarks', JSON.stringify(APP.bookmarks));
+}
+
+// ═══ SORT / SEARCH / TABS ═══
+function toggleSort() {
+  if (APP.sortKey === 'name' && APP.sortAsc) {
+    APP.sortAsc = false;
+  } else if (APP.sortKey === 'name') {
+    APP.sortKey = 'date'; APP.sortAsc = false;
+  } else if (APP.sortKey === 'date' && !APP.sortAsc) {
+    APP.sortAsc = true;
+  } else {
+    APP.sortKey = 'name'; APP.sortAsc = true;
+  }
+  document.getElementById('sort-label').textContent = APP.sortKey === 'name' ? '名前' : '日付';
+  document.getElementById('sort-icon').style.transform = APP.sortAsc ? '' : 'rotate(180deg)';
+  renderFileList();
+}
+
+function handleSearch() {
+  APP.searchQuery = document.getElementById('search-input').value;
+  renderFileList();
+}
+
+function switchTab(tab) {
+  APP.activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  renderFileList();
+}
+
+// ═══ VIEWER ═══
+async function openFile(id, name) {
+  APP.currentFile = { id, name };
+  document.getElementById('viewer-title').textContent = name;
+  showScreen('viewer-screen');
+
+  const btn = document.getElementById('viewer-bookmark-btn');
+  if (APP.bookmarks[id]) {
+    btn.querySelector('svg').style.fill = 'var(--yellow)';
+    btn.style.color = 'var(--yellow)';
+  } else {
+    btn.querySelector('svg').style.fill = 'none';
+    btn.style.color = '';
+  }
+
+  const vc = document.getElementById('viewer-content');
+  vc.innerHTML = '<div class="spinner"></div>';
+
+  try {
+    const text = await gFetchText(`https://www.googleapis.com/drive/v3/files/${id}?alt=media`);
+    APP.currentContent = text;
+    renderMarkdown(text);
+  } catch(e) {
+    vc.innerHTML = `<div class="empty-state"><p>読み込みエラー</p><p style="font-size:12px">${e.message}</p></div>`;
+  }
+}
+
+function renderMarkdown(text) {
+  const vc = document.getElementById('viewer-content');
+  marked.setOptions({
+    highlight: function(code, lang) {
+      if (lang && hljs.getLanguage(lang)) {
+        return hljs.highlight(code, { language: lang }).value;
+      }
+      return hljs.highlightAuto(code).value;
+    },
+    breaks: true,
+    gfm: true,
+  });
+  vc.innerHTML = marked.parse(text);
+  vc.scrollTop = 0;
+  buildToc();
+}
+
+function buildToc() {
+  const headings = document.getElementById('viewer-content').querySelectorAll('h1, h2, h3');
+  const list = document.getElementById('toc-list');
+  if (headings.length === 0) {
+    list.innerHTML = '<div style="padding:16px;color:var(--text-muted);">見出しなし</div>';
+    return;
+  }
+  list.innerHTML = Array.from(headings).map((h, i) => {
+    h.id = 'heading-' + i;
+    const level = parseInt(h.tagName.charAt(1));
+    return `<button class="toc-item" data-level="${level}" onclick="jumpToHeading('heading-${i}')">${esc(h.textContent)}</button>`;
+  }).join('');
+}
+
+function jumpToHeading(id) {
+  document.getElementById(id).scrollIntoView({ behavior:'smooth', block:'start' });
+  toggleToc();
+}
+
+function toggleToc() {
+  document.getElementById('toc-panel').classList.toggle('open');
+  document.getElementById('toc-overlay').classList.toggle('show');
+}
+
+function closeViewer() {
+  showScreen('list-screen');
+}
+
+// ═══ EDITOR ═══
+function editFile() {
+  document.getElementById('editor-title').textContent = APP.currentFile.name;
+  document.getElementById('editor-textarea').value = APP.currentContent;
+  showScreen('editor-screen');
+}
+
+function cancelEdit() {
+  showScreen('viewer-screen');
+}
+
+async function saveFile() {
+  const content = document.getElementById('editor-textarea').value;
+  try {
+    const metadata = JSON.stringify({ name: APP.currentFile.name });
+    const boundary = '-------314159265358979323846';
+    const body = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${metadata}\r\n--${boundary}\r\nContent-Type: text/markdown\r\n\r\n${content}\r\n--${boundary}--`;
+
+    await fetch(`https://www.googleapis.com/upload/drive/v3/files/${APP.currentFile.id}?uploadType=multipart`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': 'Bearer ' + APP.token,
+        'Content-Type': 'multipart/related; boundary=' + boundary,
+      },
+      body: body,
+    });
+
+    APP.currentContent = content;
+    renderMarkdown(content);
+    showScreen('viewer-screen');
+    showToast('保存しました');
+  } catch(e) {
+    showToast('保存エラー: ' + e.message);
+  }
+}
+
+// ═══ NEW FILE ═══
+function showNewFileModal() {
+  document.getElementById('new-file-name').value = '';
+  document.getElementById('new-file-modal').classList.add('show');
+  setTimeout(() => document.getElementById('new-file-name').focus(), 300);
+}
+
+async function createNewFile() {
+  let name = document.getElementById('new-file-name').value.trim();
+  if (!name) { showToast('ファイル名を入力してください'); return; }
+  if (!name.endsWith('.md')) name += '.md';
+
+  const folderId = APP.folderStack[APP.folderStack.length - 1].id;
+  try {
+    const metadata = {
+      name: name,
+      mimeType: 'text/markdown',
+      parents: [folderId],
+    };
+    const initContent = `# ${name.replace('.md','')}\n\n`;
+
+    const boundary = '-------314159265358979323846';
+    const body = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n--${boundary}\r\nContent-Type: text/markdown\r\n\r\n${initContent}\r\n--${boundary}--`;
+
+    const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer ' + APP.token,
+        'Content-Type': 'multipart/related; boundary=' + boundary,
+      },
+      body: body,
+    });
+    const file = await resp.json();
+
+    document.getElementById('new-file-modal').classList.remove('show');
+    showToast(`${name} を作成しました`);
+
+    // Open the new file in editor
+    APP.currentFile = { id: file.id, name: name };
+    APP.currentContent = initContent;
+    document.getElementById('editor-title').textContent = name;
+    document.getElementById('editor-textarea').value = initContent;
+    showScreen('editor-screen');
+
+  } catch(e) {
+    showToast('作成エラー: ' + e.message);
+  }
+}
+
+// ═══ UTIL ═══
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+function formatDate(iso) {
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return 'たった今';
+  if (diff < 3600000) return Math.floor(diff/60000) + '分前';
+  if (diff < 86400000) return Math.floor(diff/3600000) + '時間前';
+  if (diff < 604800000) return Math.floor(diff/86400000) + '日前';
+  return d.getFullYear() + '/' + (d.getMonth()+1) + '/' + d.getDate();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>
