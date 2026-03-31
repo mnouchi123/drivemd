@@ -604,6 +604,9 @@ function getRedirectUri() {
 
 function startRedirectAuth() {
   const redirectUri = getRedirectUri();
+  const cidPreview = APP.clientId ? APP.clientId.slice(0, 12) + '...' : '(未設定)';
+  showToast('DEBUG redirect_uri: ' + redirectUri + ' | client_id: ' + cidPreview, 8000);
+
   const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
   // iOS Safari はクロスオリジンリダイレクト後に sessionStorage をクリアするため localStorage を使用
   // 5分の有効期限を設定してセキュリティを担保
@@ -619,7 +622,9 @@ function startRedirectAuth() {
     prompt: 'consent',
   });
 
-  window.location.assign('https://accounts.google.com/o/oauth2/v2/auth?' + params.toString());
+  setTimeout(() => {
+    window.location.assign('https://accounts.google.com/o/oauth2/v2/auth?' + params.toString());
+  }, 3000);
 }
 
 function handleRedirectAuthResult() {
@@ -1103,11 +1108,11 @@ function formatDate(iso) {
   return d.getFullYear() + '/' + (d.getMonth()+1) + '/' + d.getDate();
 }
 
-function showToast(msg) {
+function showToast(msg, duration) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2500);
+  setTimeout(() => t.classList.remove('show'), duration || 2500);
 }
 </script>
 </body>
