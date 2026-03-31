@@ -602,12 +602,8 @@ function getRedirectUri() {
   return window.location.origin + path;
 }
 
-async function startRedirectAuth() {
+function startRedirectAuth() {
   const redirectUri = getRedirectUri();
-  showToast('redirect_uri: ' + redirectUri, 6000);
-  await new Promise(r => setTimeout(r, 6500));
-  showToast('client_id: ' + (APP.clientId || '(未設定)'), 8000);
-
   const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
   // iOS Safari はクロスオリジンリダイレクト後に sessionStorage をクリアするため localStorage を使用
   // 5分の有効期限を設定してセキュリティを担保
@@ -623,7 +619,6 @@ async function startRedirectAuth() {
     prompt: 'consent',
   });
 
-  await new Promise(r => setTimeout(r, 8500));
   window.location.assign('https://accounts.google.com/o/oauth2/v2/auth?' + params.toString());
 }
 
@@ -637,6 +632,9 @@ function handleRedirectAuthResult() {
   const state = hash.get('state');
   const expectedState = localStorage.getItem('drivemd_oauth_state');
   const exp = parseInt(localStorage.getItem('drivemd_oauth_state_exp') || '0', 10);
+
+  // デバッグ: stateの一致状況を表示
+  showToast('DBG state=' + (state ? state.slice(0,6) : 'null') + ' expected=' + (expectedState ? expectedState.slice(0,6) : 'null'), 6000);
 
   history.replaceState(null, '', window.location.pathname + window.location.search);
   localStorage.removeItem('drivemd_oauth_state');
