@@ -269,14 +269,14 @@ body {
 .viewer-content {
   flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch;
   padding: 20px 18px calc(var(--safe-bottom) + 20px);
-  font-size: 15.5px; line-height: 1.75;
+  font-size: var(--font-size); line-height: 1.75;
 }
 
 /* Markdown Styles */
-.viewer-content h1 { font-size:24px; font-weight:700; margin:28px 0 14px; color:var(--text-primary); border-bottom:1px solid var(--border); padding-bottom:8px; }
-.viewer-content h2 { font-size:20px; font-weight:600; margin:24px 0 12px; color:var(--text-primary); }
-.viewer-content h3 { font-size:17px; font-weight:600; margin:20px 0 10px; color:var(--text-primary); }
-.viewer-content h4, .viewer-content h5, .viewer-content h6 { font-size:15px; font-weight:600; margin:16px 0 8px; }
+.viewer-content h1 { font-size:1.55em; font-weight:700; margin:28px 0 14px; color:var(--text-primary); border-bottom:1px solid var(--border); padding-bottom:8px; }
+.viewer-content h2 { font-size:1.3em; font-weight:600; margin:24px 0 12px; color:var(--text-primary); }
+.viewer-content h3 { font-size:1.1em; font-weight:600; margin:20px 0 10px; color:var(--text-primary); }
+.viewer-content h4, .viewer-content h5, .viewer-content h6 { font-size:1em; font-weight:600; margin:16px 0 8px; }
 .viewer-content p { margin:0 0 14px; }
 .viewer-content a { color:var(--blue); text-decoration:none; }
 .viewer-content a:hover { text-decoration:underline; }
@@ -329,7 +329,7 @@ body {
 .editor-textarea {
   flex:1; width:100%; border:none; background:var(--bg);
   color:var(--text-primary); font-family:'SF Mono','Menlo',monospace;
-  font-size:14px; line-height:1.7; padding:16px 18px calc(var(--safe-bottom) + 20px);
+  font-size:var(--font-size); line-height:1.7; padding:16px 18px calc(var(--safe-bottom) + 20px);
   resize:none; outline:none;
   -webkit-overflow-scrolling:touch;
 }
@@ -614,10 +614,11 @@ function updateThemeIcons(theme) {
 }
 
 function changeFontSize(delta) {
-  const current = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--font-size'), 10) || 15;
+  const current = parseInt(localStorage.getItem('drivemd_fontsize') || '15', 10);
   const next = Math.min(22, Math.max(11, current + delta));
   document.documentElement.style.setProperty('--font-size', next + 'px');
   localStorage.setItem('drivemd_fontsize', next);
+  showToast('文字サイズ: ' + next + 'px');
 }
 
 function handleLogin() {
