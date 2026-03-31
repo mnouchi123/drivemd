@@ -46,6 +46,26 @@
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --header-h: 56px;
   --toolbar-h: 48px;
+  --font-size: 15px;
+}
+
+body.light {
+  --bg: #fafaf7;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f0ede8;
+  --bg-hover: #e8e4de;
+  --border: #ddd8d0;
+  --border-light: #e8e4de;
+  --text-primary: #2a2420;
+  --text-secondary: #6b6560;
+  --text-muted: #9b9590;
+  --accent: #7c6f5b;
+  --accent-hover: #5a4f3e;
+  --accent-glow: rgba(124,111,91,0.12);
+  --blue: #3a6080;
+  --green: #3a7a50;
+  --red: #a04040;
+  --yellow: #a08030;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
@@ -60,6 +80,7 @@ body {
   position: fixed;
   width: 100%;
   -webkit-font-smoothing: antialiased;
+  font-size: var(--font-size);
 }
 
 /* ═══ SCREENS ═══ */
@@ -372,6 +393,9 @@ body {
     <button class="header-btn" onclick="refreshList()">
       <svg viewBox="0 0 24 24"><path d="M1 4v6h6"/><path d="M23 20v-6h-6"/><path d="M20.49 9A9 9 0 005.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 013.51 15"/></svg>
     </button>
+    <button class="header-btn" id="theme-btn-list" onclick="toggleTheme()" title="テーマ切替">
+      <svg id="theme-icon-list" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    </button>
     <img class="user-avatar" id="user-avatar" src="" onclick="handleLogout()" title="ログアウト" style="display:none">
   </div>
 
@@ -407,6 +431,11 @@ body {
     <div class="header-title" id="viewer-title">document.md</div>
     <button class="header-btn" id="viewer-bookmark-btn" onclick="toggleViewerBookmark()">
       <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
+    </button>
+    <button class="header-btn" onclick="changeFontSize(-1)" title="文字を小さく" style="font-size:11px;font-weight:700;font-family:sans-serif;">A-</button>
+    <button class="header-btn" onclick="changeFontSize(1)" title="文字を大きく" style="font-size:15px;font-weight:700;font-family:sans-serif;">A+</button>
+    <button class="header-btn" onclick="toggleTheme()" title="テーマ切替">
+      <svg id="theme-icon-viewer" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
     </button>
     <button class="header-btn" onclick="toggleToc()">
       <svg viewBox="0 0 24 24"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
@@ -557,6 +586,40 @@ async function fetchUserInfo() {
   } catch(e) {}
 }
 
+// ═══ THEME & FONT SIZE ═══
+function initTheme() {
+  const theme = localStorage.getItem('drivemd_theme') || 'dark';
+  const size = parseInt(localStorage.getItem('drivemd_fontsize') || '15', 10);
+  if (theme === 'light') document.body.classList.add('light');
+  document.documentElement.style.setProperty('--font-size', size + 'px');
+  updateThemeIcons(theme);
+}
+
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  const theme = isLight ? 'light' : 'dark';
+  localStorage.setItem('drivemd_theme', theme);
+  updateThemeIcons(theme);
+}
+
+function updateThemeIcons(theme) {
+  // ライト時は月アイコン、ダーク時は太陽アイコン
+  const moonSvg = '<path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>';
+  const sunSvg = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  const svg = theme === 'light' ? moonSvg : sunSvg;
+  ['theme-icon-list', 'theme-icon-viewer'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = svg;
+  });
+}
+
+function changeFontSize(delta) {
+  const current = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--font-size'), 10) || 15;
+  const next = Math.min(22, Math.max(11, current + delta));
+  document.documentElement.style.setProperty('--font-size', next + 'px');
+  localStorage.setItem('drivemd_fontsize', next);
+}
+
 function handleLogin() {
   if (!APP.clientId) {
     showSettings();
@@ -581,6 +644,7 @@ function handleLogout() {
 
 // Wait for GIS library
 window.addEventListener('load', () => {
+  initTheme();
   handleRedirectAuthResult();
   const ci = localStorage.getItem('drivemd_client_id');
   if (ci) {
