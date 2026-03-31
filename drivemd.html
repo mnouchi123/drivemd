@@ -608,7 +608,6 @@ function startRedirectAuth() {
   // iOS Safari はクロスオリジンリダイレクト後に sessionStorage をクリアするため localStorage を使用
   // 5分の有効期限を設定してセキュリティを担保
   localStorage.setItem('drivemd_oauth_state', state);
-  localStorage.setItem('drivemd_oauth_state_exp', Date.now() + 5 * 60 * 1000);
 
   const params = new URLSearchParams({
     client_id: APP.clientId,
@@ -631,13 +630,11 @@ function handleRedirectAuthResult() {
   const error = hash.get('error');
   const state = hash.get('state');
   const expectedState = localStorage.getItem('drivemd_oauth_state');
-  const exp = parseInt(localStorage.getItem('drivemd_oauth_state_exp') || '0', 10);
 
   history.replaceState(null, '', window.location.pathname + window.location.search);
   localStorage.removeItem('drivemd_oauth_state');
-  localStorage.removeItem('drivemd_oauth_state_exp');
 
-  if (!state || !expectedState || state !== expectedState || Date.now() > exp) {
+  if (!state || !expectedState || state !== expectedState) {
     showToast('認証エラー: state が一致しません');
     return;
   }
