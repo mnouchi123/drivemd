@@ -698,10 +698,24 @@ function showSettings() {
   document.getElementById('settings-modal').classList.add('show');
 }
 
+function sanitizeClientId(raw) {
+  // URL形式で貼られた場合（例: http://xxx.apps.googleusercontent.com/）から正しいIDを抽出
+  let s = raw.trim();
+  s = s.replace(/^https?:\/\//i, '');  // 先頭の http:// https:// を除去
+  s = s.replace(/\/+$/, '');           // 末尾の / を除去
+  return s;
+}
+
 function saveSettings() {
-  const cid = document.getElementById('client-id-input').value.trim();
-  if (!cid) { showToast('Client IDを入力してください'); return; }
+  const raw = document.getElementById('client-id-input').value.trim();
+  if (!raw) { showToast('Client IDを入力してください'); return; }
+  const cid = sanitizeClientId(raw);
+  if (!cid.endsWith('.apps.googleusercontent.com')) {
+    showToast('Client IDの形式が正しくありません。xxx.apps.googleusercontent.com の形式で入力してください');
+    return;
+  }
   APP.clientId = cid;
+  document.getElementById('client-id-input').value = cid;
   localStorage.setItem('drivemd_client_id', cid);
   document.getElementById('settings-modal').classList.remove('show');
   initGIS();
