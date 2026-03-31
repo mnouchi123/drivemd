@@ -764,6 +764,10 @@ function enterFolder(id, name) {
   APP.folderStack.push({ id, name });
   APP.searchQuery = '';
   document.getElementById('search-input').value = '';
+  if (APP.activeTab !== 'files') {
+    APP.activeTab = 'files';
+    document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === 'files'));
+  }
   loadFolder(id);
 }
 
