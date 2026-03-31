@@ -853,9 +853,9 @@ function renderFileList() {
         <div class="file-name">${esc(f.name)}</div>
         <div class="file-meta">${date}</div>
       </div>
-      ${!isFolder ? `<button class="file-bookmark ${bm}" onclick="event.stopPropagation();toggleBookmark('${f.id}','${esc(f.name)}',this)">
+      <button class="file-bookmark ${bm}" onclick="event.stopPropagation();toggleBookmark('${f.id}','${esc(f.name)}',${isFolder},this)">
         <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
-      </button>` : ''}
+      </button>
     </div>`;
   }).join('');
 }
@@ -871,9 +871,16 @@ function renderBookmarks() {
     </div>`;
     return;
   }
-  listEl.innerHTML = bms.map(([id, name]) => {
-    return `<div class="file-item" onclick="openFile('${id}','${esc(name)}')">
-      <div class="file-icon md"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+  listEl.innerHTML = bms.map(([id, val]) => {
+    const name = typeof val === 'object' ? val.name : val;
+    const isFolder = typeof val === 'object' ? val.isFolder : false;
+    const action = isFolder ? `enterFolder('${id}','${esc(name)}')` : `openFile('${id}','${esc(name)}')`;
+    const iconSvg = isFolder
+      ? '<svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>'
+      : '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>';
+    const iconClass = isFolder ? 'folder' : 'md';
+    return `<div class="file-item" onclick="${action}">
+      <div class="file-icon ${iconClass}">${iconSvg}</div>
       <div class="file-info"><div class="file-name">${esc(name)}</div></div>
       <button class="file-bookmark active" onclick="event.stopPropagation();removeBookmark('${id}')">
         <svg viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/></svg>
@@ -882,12 +889,12 @@ function renderBookmarks() {
   }).join('');
 }
 
-function toggleBookmark(id, name, btn) {
+function toggleBookmark(id, name, isFolder, btn) {
   if (APP.bookmarks[id]) {
     delete APP.bookmarks[id];
     btn.classList.remove('active');
   } else {
-    APP.bookmarks[id] = name;
+    APP.bookmarks[id] = { name, isFolder };
     btn.classList.add('active');
   }
   localStorage.setItem('drivemd_bookmarks', JSON.stringify(APP.bookmarks));
