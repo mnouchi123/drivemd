@@ -1,8 +1,8 @@
 # DriveMD - プロダクト要件定義書 (PRD)
 
-**バージョン:** 1.1  
-**最終更新:** 2026-03-30  
-**ステータス:** MVP / Desktop auth verified, iOS auth under investigation
+**バージョン:** 1.3
+**最終更新:** 2026-03-31
+**ステータス:** MVP完了 / 全プラットフォーム動作確認済み・テーマ＆フォントサイズ調整対応
 
 ---
 
@@ -66,9 +66,10 @@ DriveMD は Google Drive 上の Markdown ファイルを快適に閲覧・編集
 補足:
 
 - 初回は `Client ID設定` に OAuth Client ID を手入力する
-- `Client ID` は `localStorage` に保存する
-- 認証は Desktop Chrome で成功確認済み
-- iOS Safari / iOS Chrome では `401: invalid_client` が継続しており未解決
+- `Client ID` は `localStorage` に保存する（入力時に `http://` プレフィックス・末尾スラッシュを自動除去、形式バリデーションあり）
+- OAuth state は `localStorage` に保存する（iOS Safari はクロスオリジンリダイレクト後に `sessionStorage` をクリアするため）
+- `redirect_uri` は末尾スラッシュを自動付与して GCP 登録 URI と一致させる
+- Desktop Chrome / iOS Safari / iOS Chrome すべてで動作確認済み
 
 ### 4-2. OAuth スコープ
 
@@ -142,18 +143,41 @@ Google Drive 全体への読み書きアクセス。閲覧、編集、新規作�
 ### 5-6. ブックマーク
 
 - `localStorage` 保存
+- ファイル・フォルダ両方をブックマーク可能
 - 一覧 / ビューア両方から ON/OFF
-- ブックマークタブで一覧表示
+- ブックマークタブで一覧表示（フォルダはフォルダアイコン、タップでそのフォルダへ移動）
+- ブックマークタブからフォルダを開くと自動的にファイルタブへ切り替わる
+- 保存形式: `{id: {name, isFolder}}`（旧形式 `{id: name}` との後方互換あり）
 
-### 5-7. 追加したデバッグ挙動
+### 5-7. テーマ切替
 
-認証調査のため、以下のトースト文言を出す実装を追加済み:
+- ダーク（デフォルト）/ ライト（白ベース・ノート風）の2テーマ
+- ファイル一覧・ビューアのヘッダーに ☀/🌙 ボタン
+- ダーク時は太陽アイコン、ライト時は月アイコンを表示
+- 設定は `localStorage`（`drivemd_theme`）に保存し、次回起動時も維持
+
+ライトテーマ配色:
+
+| 要素 | 値 |
+|------|-----|
+| 背景 | `#fafaf7`（メイン）/ `#ffffff`（サーフェス） |
+| テキスト | `#2a2420`（プライマリ）/ `#6b6560`（セカンダリ） |
+| アクセント | `#7c6f5b`（ダークと共通） |
+| ボーダー | `#ddd8d0` |
+
+### 5-8. フォントサイズ調整
+
+- ビューアヘッダーに `A-` / `A+` ボタン
+- 1px 単位で変更（範囲: 11px〜22px）
+- 設定は `localStorage`（`drivemd_fontsize`）に保存し、次回起動時も維持
+- `--font-size` CSS 変数で全体に反映
+
+### 5-9. エラーハンドリング
 
 - `認証エラー: Client ID または OAuth 設定を確認してください`
-- `認証画面を開けませんでした...`
-- `認証画面が閉じられました...`
 - `認証エラー: state が一致しません`
 - `認証エラー: access token を受け取れませんでした`
+- Client ID 形式不正時: `xxx.apps.googleusercontent.com の形式で入力してください`
 
 ---
 
@@ -163,13 +187,15 @@ Google Drive 全体への読み書きアクセス。閲覧、編集、新規作�
 
 | 要素 | 値 |
 |------|-----|
-| テーマ | ダーク固定 |
-| 背景色 | `#0f0f14`, `#1a1a24`, `#22222e` |
-| テキスト色 | `#e0d6c8`, `#9a9aae`, `#6a6a7e` |
-| アクセント色 | `#7c6f5b` |
-| ボーダー | `#2d2d3d` |
+| テーマ | ダーク / ライト切替可能 |
+| 背景色（ダーク） | `#0f0f14`, `#1a1a24`, `#22222e` |
+| テキスト色（ダーク） | `#e0d6c8`, `#9a9aae`, `#6a6a7e` |
+| 背景色（ライト） | `#fafaf7`, `#ffffff`, `#f0ede8` |
+| テキスト色（ライト） | `#2a2420`, `#6b6560`, `#9b9590` |
+| アクセント色 | `#7c6f5b`（共通） |
 | 角丸 | 12px / 8px |
 | フォント | Montserrat / Hiragino Sans |
+| フォントサイズ | `--font-size` 変数（デフォルト 15px、11〜22px） |
 
 ### 6-2. PWA メタ
 
@@ -216,14 +242,17 @@ orderBy: folder,name
 - Google Drive API 有効化
 - OAuth 同意画面作成
 - Web application の OAuth client 作成
-- Desktop Chrome で Google OAuth 画面までは到達
+- Desktop Chrome で OAuth 認証・Drive 一覧表示
+- iOS Safari での OAuth 認証・Drive 一覧表示
+- iOS Chrome での OAuth 認証・Drive 一覧表示
+- iOS Safari ホーム画面追加・フルスクリーン起動
+- ファイル・フォルダのブックマーク
+- ライト / ダーク テーマ切替
+- フォントサイズ A- / A+ 調整
 
 ### 8-2. 未完了
 
-- Desktop Chrome で Drive 一覧まで安定して到達する最終確認
-- iOS Safari での OAuth 完了
-- iOS Chrome での OAuth 完了
-- ホーム画面追加後の導線確認
+- なし（MVP 完了）
 
 ---
 
@@ -231,10 +260,9 @@ orderBy: folder,name
 
 | 問題 | 状態 |
 |------|------|
-| iOS Safari で `401: invalid_client` | 未解決 |
-| iOS Chrome で `401: invalid_client` | 未解決 |
-| Desktop Chrome では認証画面を通過できるが、一覧遷移の最終確認が未完 | 調査中 |
-| `userinfo` 取得失敗時のログイン巻き戻り | 暫定対応済み |
+| iOS Safari で `401: invalid_client` | 解決済み（Client ID の入力形式誤り・sessionStorage → localStorage 切替） |
+| iOS Chrome で `401: invalid_client` | 解決済み |
+| `userinfo` 取得失敗時のログイン巻き戻り | 対応済み |
 
 ---
 
@@ -249,7 +277,6 @@ orderBy: folder,name
 | Markdown 以外のプレビュー | 未対応 |
 | 画像相対パス | 未対応 |
 | 同時編集 | 最後の保存が勝つ |
-| iOS 認証 | 現在不安定 |
 
 ---
 
@@ -257,9 +284,8 @@ orderBy: folder,name
 
 優先順:
 
-1. iOS Safari / iOS Chrome の `invalid_client` 原因特定
-2. Desktop と iOS の認証差分を切り分け
-3. 必要なら認証を backend 付き code flow に移行
-4. Client ID の埋め込みまたは設定簡略化
-5. Service Worker とオフライン検討
+1. Service Worker とオフラインキャッシュ対応
+2. OAuth 同意画面を本番公開（テストモード解除・7日トークン期限の解消）
+3. Client ID の埋め込みまたは設定簡略化
+4. 必要なら認証を backend 付き Authorization Code + PKCE flow に移行
 
